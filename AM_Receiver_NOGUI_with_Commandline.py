@@ -28,26 +28,87 @@ from gnuradio.filter import firdes
 from grc_gnuradio import wxgui as grc_wxgui
 from optparse import OptionParser
 import osmosdr
-import time
-import wx
 
+parser = OptionParser()
+parser.add_option(
+    "-f", "--freq",
+    type="float",
+    default=120.5e6,
+    help="Receive frequency :ex.120.5e6",
+    dest="freq"
+)
+
+parser.add_option(
+    "-g", "--gain",
+    type="float",
+    default=49.6,
+    help="Receiver RFGain :ex. 49.6",
+    dest="gain"
+)
+
+parser.add_option(
+    "-s", "--squelch",
+    type="float",
+    default=-9.6,
+    help="Squelch value :ex. -9.6",
+    dest="squelch"
+)
+
+parser.add_option(
+    "-c", "--correct",
+    type="float",
+    default=-30.0,
+    help="Frequency correction value(ppm) :ex. -30.0",
+    dest="correct"
+)
+
+parser.add_option(
+    "-H", "--Host",
+    type="string",
+    default="192.168.0.1",
+    help="IP_addr of rtl_tcp host :ex. 192.168.0.1",
+    dest="host"
+)
+
+parser.add_option(
+    "-P", "--port",
+    type="int",
+    default=1234,
+    help="rtl_tcp port :ex. 1234",
+    dest="port"
+)
+
+parser.add_option(
+    "-d", "--DestHost",
+    type="string",
+    default="127.0.0.1",
+    help="UDP destination host ip addr :ex. 127.0.0.1",
+    dest="desthost"
+)
+
+parser.add_option(
+    "-p", "--DestPort",
+    type="int",
+    default=8082,
+    help="UDP destination port :ex. 8082",
+    dest="destport"
+)
+(option, args) = parser.parse_args()
 
 class AM_Receiver_NOGUI(grc_wxgui.top_block_gui):
 
     def __init__(self):
         grc_wxgui.top_block_gui.__init__(self, title="air band receiver")
-        _icon_path = "C:\Program Files\GNURadio-3.7\share\icons\hicolor\scalable/apps\gnuradio-grc.png"
-        self.SetIcon(wx.Icon(_icon_path, wx.BITMAP_TYPE_ANY))
 
         ##################################################
         # Variables
         ##################################################
-        self.sql = sql = -10.0
+        self.sql = sql = option.squelch
         self.samp_rate = samp_rate = 2.4e6
-        self.rfgain = rfgain = 49.5
-        self.frq_corr = frq_corr = 30.0
-        self.device_arg = device_arg = "rtl_tcp=192.168.10.109:1235"
-        self.base_freq = base_freq = 120.5e6
+        self.rfgain = rfgain = option.gain
+        self.frq_corr = frq_corr = option.correct
+        self.device_arg = device_arg = "rtl_tcp={0}:{1}".format(option.host, option.port)
+        self.base_freq = base_freq = option.freq
 
         ##################################################
         # Blocks
@@ -66,7 +127,7 @@ class AM_Receiver_NOGUI(grc_wxgui.top_block_gui):
         self.osmosdr_source_0.set_bandwidth(0, 0)
 
         self.freq_xlating_fir_filter_xxx_0 = filter.freq_xlating_fir_filter_ccc(50, (firdes.low_pass_2(1,samp_rate,25e3,10e3,40)), 0, samp_rate)
-        self.blocks_udp_sink_0 = blocks.udp_sink(gr.sizeof_short*1, '192.168.10.30', 8082, 1472, True)
+        self.blocks_udp_sink_0 = blocks.udp_sink(gr.sizeof_short*1, option.desthost, option.destport, 1472, True)
         self.blocks_throttle_0 = blocks.throttle(gr.sizeof_gr_complex*1, samp_rate,True)
         self.blocks_multiply_const_vxx_0 = blocks.multiply_const_vff((0.5, ))
         self.blocks_float_to_short_0 = blocks.float_to_short(1, 32767)
@@ -141,11 +202,10 @@ class AM_Receiver_NOGUI(grc_wxgui.top_block_gui):
 
 
 def main(top_block_cls=AM_Receiver_NOGUI, options=None):
-
     tb = top_block_cls()
     tb.Start(True)
     tb.Wait()
 
 
 if __name__ == '__main__':
-    main()
+    main(options=option)
