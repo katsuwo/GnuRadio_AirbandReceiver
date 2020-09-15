@@ -3,8 +3,9 @@
 ##################################################
 # GNU Radio Python Flow Graph
 # Title: air band receiver
-# GNU Radio version: 3.7.13.5
+# Generated: Tue Sep 15 20:46:39 2020
 ##################################################
+
 
 if __name__ == '__main__':
     import ctypes
@@ -34,7 +35,7 @@ class AM_Receiver_NOGUI(grc_wxgui.top_block_gui):
 
     def __init__(self):
         grc_wxgui.top_block_gui.__init__(self, title="air band receiver")
-        _icon_path = "C:\Program Files\GNURadio-3.7\share\icons\hicolor\scalable/apps\gnuradio-grc.png"
+        _icon_path = "/usr/share/icons/hicolor/32x32/apps/gnuradio-grc.png"
         self.SetIcon(wx.Icon(_icon_path, wx.BITMAP_TYPE_ANY))
 
         ##################################################
@@ -67,7 +68,6 @@ class AM_Receiver_NOGUI(grc_wxgui.top_block_gui):
 
         self.freq_xlating_fir_filter_xxx_0 = filter.freq_xlating_fir_filter_ccc(50, (firdes.low_pass_2(1,samp_rate,25e3,10e3,40)), 0, samp_rate)
         self.blocks_udp_sink_0 = blocks.udp_sink(gr.sizeof_short*1, udp_dest_host, udp_dest_port, 1472, True)
-        self.blocks_throttle_0 = blocks.throttle(gr.sizeof_gr_complex*1, samp_rate,True)
         self.blocks_float_to_short_0 = blocks.float_to_short(1, 32767)
         self.analog_pwr_squelch_xx_0 = analog.pwr_squelch_cc(sql, 1e-4, 0, False)
         self.analog_am_demod_cf_0 = analog.am_demod_cf(
@@ -79,8 +79,6 @@ class AM_Receiver_NOGUI(grc_wxgui.top_block_gui):
         self.analog_agc2_xx_0 = analog.agc2_cc(1e-3, 1e-5, 1.0, 0)
         self.analog_agc2_xx_0.set_max_gain(5)
 
-
-
         ##################################################
         # Connections
         ##################################################
@@ -88,9 +86,8 @@ class AM_Receiver_NOGUI(grc_wxgui.top_block_gui):
         self.connect((self.analog_am_demod_cf_0, 0), (self.blocks_float_to_short_0, 0))
         self.connect((self.analog_pwr_squelch_xx_0, 0), (self.analog_am_demod_cf_0, 0))
         self.connect((self.blocks_float_to_short_0, 0), (self.blocks_udp_sink_0, 0))
-        self.connect((self.blocks_throttle_0, 0), (self.freq_xlating_fir_filter_xxx_0, 0))
         self.connect((self.freq_xlating_fir_filter_xxx_0, 0), (self.analog_agc2_xx_0, 0))
-        self.connect((self.osmosdr_source_0, 0), (self.blocks_throttle_0, 0))
+        self.connect((self.osmosdr_source_0, 0), (self.freq_xlating_fir_filter_xxx_0, 0))
 
     def get_udp_dest_port(self):
         return self.udp_dest_port
@@ -118,7 +115,6 @@ class AM_Receiver_NOGUI(grc_wxgui.top_block_gui):
         self.samp_rate = samp_rate
         self.osmosdr_source_0.set_sample_rate(self.samp_rate)
         self.freq_xlating_fir_filter_xxx_0.set_taps((firdes.low_pass_2(1,self.samp_rate,25e3,10e3,40)))
-        self.blocks_throttle_0.set_sample_rate(self.samp_rate)
 
     def get_rfgain(self):
         return self.rfgain
