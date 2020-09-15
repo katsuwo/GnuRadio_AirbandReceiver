@@ -9,6 +9,7 @@
 if __name__ == '__main__':
     import ctypes
     import sys
+
     if sys.platform.startswith('linux'):
         try:
             x11 = ctypes.cdll.LoadLibrary('libX11.so')
@@ -17,6 +18,7 @@ if __name__ == '__main__':
             print "Warning: failed to XInitThreads()"
 
 from gnuradio import analog
+from gnuradio import audio
 from gnuradio import blocks
 from gnuradio import eng_notation
 from gnuradio import filter
@@ -40,8 +42,6 @@ class AM_Receiver_NOGUI(grc_wxgui.top_block_gui):
         ##################################################
         # Variables
         ##################################################
-        self.udp_dest_port = udp_dest_port = 8082
-        self.udp_dest_host = udp_dest_host = "192.168.10.30"
         self.sql = sql = -10.0
         self.samp_rate = samp_rate = 2.4e6
         self.rfgain = rfgain = 49.5
@@ -66,9 +66,11 @@ class AM_Receiver_NOGUI(grc_wxgui.top_block_gui):
         self.osmosdr_source_0.set_bandwidth(0, 0)
 
         self.freq_xlating_fir_filter_xxx_0 = filter.freq_xlating_fir_filter_ccc(50, (firdes.low_pass_2(1,samp_rate,25e3,10e3,40)), 0, samp_rate)
-        self.blocks_udp_sink_0 = blocks.udp_sink(gr.sizeof_short*1, udp_dest_host, udp_dest_port, 1472, True)
+        self.blocks_udp_sink_0 = blocks.udp_sink(gr.sizeof_short*1, '192.168.10.30', 8082, 1472, True)
         self.blocks_throttle_0 = blocks.throttle(gr.sizeof_gr_complex*1, samp_rate,True)
+        self.blocks_multiply_const_vxx_0 = blocks.multiply_const_vff((0.5, ))
         self.blocks_float_to_short_0 = blocks.float_to_short(1, 32767)
+        self.audio_sink_0 = audio.sink(48000, '', True)
         self.analog_pwr_squelch_xx_0 = analog.pwr_squelch_cc(sql, 1e-4, 0, False)
         self.analog_am_demod_cf_0 = analog.am_demod_cf(
         	channel_rate=48e3,
@@ -86,23 +88,13 @@ class AM_Receiver_NOGUI(grc_wxgui.top_block_gui):
         ##################################################
         self.connect((self.analog_agc2_xx_0, 0), (self.analog_pwr_squelch_xx_0, 0))
         self.connect((self.analog_am_demod_cf_0, 0), (self.blocks_float_to_short_0, 0))
+        self.connect((self.analog_am_demod_cf_0, 0), (self.blocks_multiply_const_vxx_0, 0))
         self.connect((self.analog_pwr_squelch_xx_0, 0), (self.analog_am_demod_cf_0, 0))
         self.connect((self.blocks_float_to_short_0, 0), (self.blocks_udp_sink_0, 0))
+        self.connect((self.blocks_multiply_const_vxx_0, 0), (self.audio_sink_0, 0))
         self.connect((self.blocks_throttle_0, 0), (self.freq_xlating_fir_filter_xxx_0, 0))
         self.connect((self.freq_xlating_fir_filter_xxx_0, 0), (self.analog_agc2_xx_0, 0))
         self.connect((self.osmosdr_source_0, 0), (self.blocks_throttle_0, 0))
-
-    def get_udp_dest_port(self):
-        return self.udp_dest_port
-
-    def set_udp_dest_port(self, udp_dest_port):
-        self.udp_dest_port = udp_dest_port
-
-    def get_udp_dest_host(self):
-        return self.udp_dest_host
-
-    def set_udp_dest_host(self, udp_dest_host):
-        self.udp_dest_host = udp_dest_host
 
     def get_sql(self):
         return self.sql
