@@ -141,7 +141,9 @@ class AM_Receiver_NOGUI(grc_wxgui.top_block_gui):
         )
         self.analog_agc2_xx_0 = analog.agc2_cc(1e-3, 1e-5, 1.0, 0)
         self.analog_agc2_xx_0.set_max_gain(5)
-        self.dc_blocker_xx_0 = filter.dc_blocker_ff(32,True)
+
+        # dc_blocker not use 
+        # self.dc_blocker_xx_0 = filter.dc_blocker_ff(32,True)
 
 
         ##################################################
@@ -155,9 +157,12 @@ class AM_Receiver_NOGUI(grc_wxgui.top_block_gui):
         self.connect((self.freq_xlating_fir_filter_xxx_0, 0), (self.analog_agc2_xx_0, 0))
         self.connect((self.osmosdr_source_0, 0), (self.blocks_throttle_0, 0))
 
-        self.connect((self.analog_am_demod_cf_0, 0), (self.dc_blocker_xx_0, 0))
-        self.connect((self.dc_blocker_xx_0, 0), (self.blocks_float_to_short_0, 0))
-        self.connect((self.dc_blocker_xx_0, 0), (self.blocks_multiply_const_vxx_0, 0))
+        # bypass dc blocker
+        # self.connect((self.analog_am_demod_cf_0, 0), (self.dc_blocker_xx_0, 0))
+        # self.connect((self.dc_blocker_xx_0, 0), (self.blocks_float_to_short_0, 0))
+        # self.connect((self.dc_blocker_xx_0, 0), (self.blocks_multiply_const_vxx_0, 0))
+        self.connect((self.analog_am_demod_cf_0, 0), (self.blocks_float_to_short_0, 0))
+        self.connect((self.analog_am_demod_cf_0, 0), (self.blocks_multiply_const_vxx_0, 0))
 
     def get_sql(self):
         return self.sql
